@@ -364,44 +364,53 @@
     };
 
     function filterTeamList() {
-      const round = document.getElementById("round").value;
-      const judgeVal = document.getElementById("judgeName").value;
-      const teamSelect = document.getElementById("teamId");
+  const round = document.getElementById("round").value;
+  const judgeVal = document.getElementById("judgeName").value;
+  const teamSelect = document.getElementById("teamId");
 
-      teamSelect.innerHTML = '<option value="">-- เลือกรหัสทีม --</option>';
-      resetTeamFields(false);
+  teamSelect.innerHTML = '<option value="">-- เลือกรหัสทีม --</option>';
+  resetTeamFields(false);
 
-      if (!round || !judgeVal) {
-        teamSelect.disabled = true;
-        teamSelect.innerHTML = '<option value="">-- กรุณาเลือกรอบและกรรมการก่อน --</option>';
-        return;
-      }
+  if (!round || !judgeVal) {
+    teamSelect.disabled = true;
+    teamSelect.innerHTML = '<option value="">-- กรุณาเลือกรอบและกรรมการก่อน --</option>';
+    return;
+  }
 
-      teamSelect.disabled = false;
-      const isOddGroup = (judgeVal === "1" || judgeVal === "2");
+  teamSelect.disabled = false;
+  const isOddGroup = (judgeVal === "1" || judgeVal === "2");
 
-      const filtered = rawScheduleData.filter(item => {
-        let orderNum = 0;
-        if (round === "Round 1") orderNum = item.r1Order;
-        if (round === "Round 2") orderNum = item.r2Order;
+  const filtered = rawScheduleData.filter(item => {
+    let orderNum = 0;
+    if (round === "Round 1") orderNum = item.r1Order;
+    if (round === "Round 2") orderNum = item.r2Order;
 
-        if (!orderNum || isNaN(orderNum)) return false;
+    if (!orderNum || isNaN(orderNum)) return false;
 
-        return isOddGroup ? (orderNum % 2 !== 0) : (orderNum % 2 === 0);
-      });
+    return isOddGroup ? (orderNum % 2 !== 0) : (orderNum % 2 === 0);
+  });
 
-      if (filtered.length === 0) {
-        teamSelect.innerHTML = '<option value="">-- ไม่พบทีมในเงื่อนไขนี้ --</option>';
-        return;
-      }
+  // 📍 เพิ่มการเรียงลำดับ orderNum จากน้อยไปหามาก (Ascending Order)
+  filtered.sort((a, b) => {
+    let orderA = (round === "Round 1") ? a.r1Order : a.r2Order;
+    let orderB = (round === "Round 1") ? b.r1Order : b.r2Order;
+    return orderA - orderB;
+  });
 
-      filtered.forEach(item => {
-        const opt = document.createElement("option");
-        opt.value = item.teamId;
-        opt.textContent = `${item.teamId} - ${item.teamName}`;
-        teamSelect.appendChild(opt);
-      });
-    }
+  if (filtered.length === 0) {
+    teamSelect.innerHTML = '<option value="">-- ไม่พบทีมในเงื่อนไขนี้ --</option>';
+    return;
+  }
+
+  filtered.forEach(item => {
+    const opt = document.createElement("option");
+    opt.value = item.teamId;
+    let orderNum = (round === "Round 1") ? item.r1Order : item.r2Order;
+    // แสดงเลขลำดับกำกับไว้หน้าชื่อทีมเพื่อให้กรรมการเห็นลำดับชัดเจน
+    opt.textContent = `${item.teamId} - ${item.teamName}`;
+    teamSelect.appendChild(opt);
+  });
+}
 
     function onTeamSelect() {
       const round = document.getElementById("round").value;
